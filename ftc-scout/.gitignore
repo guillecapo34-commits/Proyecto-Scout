@@ -1,0 +1,7 @@
+node_modules/
+.env
+ml/matches_raw.json
+ml/model_classifier.pkl
+ml/model_regressor.pkl
+ml/__pycache__/
+*.pyc
