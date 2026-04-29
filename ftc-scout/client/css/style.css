@@ -271,3 +271,35 @@ canvas#radar { max-width: 100%; }
 }
 .social-btn:hover { background: #f5f8ff; color: #2471a3; border-color: #2471a3; }
 .app-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+@media (max-width: 768px) {
+  .app-nav {
+    width: 100%;
+    flex-direction: row;
+    padding: 0;
+    overflow-x: auto;
+  }
+  .nav-item {
+    padding: 10px 1rem;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  .nav-divider { display: none; }
+  .app-body { flex-direction: column; }
+  .layout {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .sidebar {
+    width: 100%;
+    order: -1;
+  }
+  .sim-alliances { grid-template-columns: 1fr; }
+  .sim-layout { padding: 1rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .alliance-grid { grid-template-columns: 1fr; }
+  .radar-wrap { max-width: 100%; }
+  .mini-radar-wrap { max-width: 140px; }
+  .pred-scores { flex-direction: column; gap: 0.5rem; }
+  .pred-alliance { width: 100%; }
+}
