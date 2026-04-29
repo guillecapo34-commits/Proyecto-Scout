@@ -2,12 +2,12 @@ import pickle
 import numpy as np
 import os
 from flask import Flask, request, jsonify
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(__name__)
 
-with open('model_classifier.pkl', 'rb') as f:
+with open(os.path.join(BASE_DIR, 'model_classifier.pkl'), 'rb') as f:
     clf = pickle.load(f)
-with open('model_regressor.pkl', 'rb') as f:
+with open(os.path.join(BASE_DIR, 'model_regressor.pkl'), 'rb') as f:
     reg = pickle.load(f)
 
 def team_to_features(t):
