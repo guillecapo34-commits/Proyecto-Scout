@@ -302,4 +302,12 @@ canvas#radar { max-width: 100%; }
   .mini-radar-wrap { max-width: 140px; }
   .pred-scores { flex-direction: column; gap: 0.5rem; }
   .pred-alliance { width: 100%; }
+
+  .featured-scores { flex-direction: column; gap: 0.5rem; }
+  .featured-alliance { width: 100%; }
+  .featured-vs { display: none; }
+  .featured-radars { grid-template-columns: 1fr; }
+  .featured-radar-wrap canvas { height: 180px !important; }
+  .teams-grid { grid-template-columns: 1fr; }
+  .search-bar { max-width: 100%; }
 }
