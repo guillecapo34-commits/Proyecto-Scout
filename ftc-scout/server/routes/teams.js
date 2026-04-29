@@ -5,6 +5,7 @@ import fetch from 'node-fetch';
 
 const router = Router();
 const cache = new NodeCache({ stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 300 });
+const ML_URL = process.env.ML_SERVICE_URL || 'http://localhost:5001';
 
 function validateTeamNumber(req, res, next) {
   const num = parseInt(req.params.number, 10);
@@ -121,9 +122,8 @@ router.get('/:number/alliance-stats', validateTeamNumber, async (req, res) => {
   }
 });
 router.post('/predict', async (req, res) => {
-  console.log('[predict] body:', JSON.stringify(req.body));
   try {
-    const response = await fetch('http://localhost:5001/predict', {
+    const response = await fetch(`${ML_URL}/predict`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body)
