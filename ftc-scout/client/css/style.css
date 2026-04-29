@@ -307,7 +307,8 @@ canvas#radar { max-width: 100%; }
   .featured-alliance { width: 100%; }
   .featured-vs { display: none; }
   .featured-radars { grid-template-columns: 1fr; }
-  .featured-radar-wrap canvas { height: 180px !important; }
+  .featured-radar-wrap { max-width: 260px; margin: auto; }
+  .featured-radar-wrap canvas { width: 100% !important; height: 260px !important; }
   .teams-grid { grid-template-columns: 1fr; }
   .search-bar { max-width: 100%; }
 }
