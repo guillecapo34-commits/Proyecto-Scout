@@ -2,6 +2,7 @@ import { Router } from 'express';
 import NodeCache from 'node-cache';
 import { fetchTeamInfo, fetchTeamStats } from '../services/ftcscout.js';
 import fetch from 'node-fetch';
+import { getTeamFromDB, saveTeamToDB, getStatsFromDB, saveStatsToDB } from '../db.js';
 
 const router = Router();
 const cache = new NodeCache({ stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 3600 });
@@ -99,18 +100,29 @@ router.get('/:number', validateTeamNumber, async (req, res) => {
   const { teamNumber } = req;
   const cacheKey = `team:${teamNumber}`;
 
+  // 1. memoria
   const cached = cache.get(cacheKey);
   if (cached) return res.json(cached);
 
+  // 2. DB
+  try {
+    const fromDB = await getTeamFromDB(teamNumber);
+    if (fromDB) {
+      cache.set(cacheKey, fromDB);
+      return res.json(fromDB);
+    }
+  } catch(e) {}
+
+  // 3. FTCScout
   try {
     const team = await fetchTeamInfo(teamNumber);
     if (!team) return res.status(404).json({ error: 'Team not found.' });
-
     cache.set(cacheKey, team);
+    saveTeamToDB(teamNumber, team).catch(() => {});
     res.json(team);
   } catch (err) {
     console.error('[teams/:number]', err.message);
-    res.status(504).json({ error: 'FTC Scout service unavailable.' });
+    res.status(504).json({ error: 'FTCScout timeout. Try again.' });
   }
 });
 
@@ -119,16 +131,28 @@ router.get('/:number/stats', validateTeamNumber, async (req, res) => {
   const season = parseInt(req.query.season, 10) || 2025;
   const cacheKey = `stats:${teamNumber}:${season}`;
 
+  // 1. memoria
   const cached = cache.get(cacheKey);
   if (cached !== undefined) return res.json(cached);
 
+  // 2. DB
+  try {
+    const fromDB = await getStatsFromDB(teamNumber, season);
+    if (fromDB) {
+      cache.set(cacheKey, fromDB);
+      return res.json(fromDB);
+    }
+  } catch(e) {}
+
+  // 3. FTCScout
   try {
     const stats = await fetchTeamStats(teamNumber, season);
     cache.set(cacheKey, stats);
+    saveStatsToDB(teamNumber, season, stats).catch(() => {});
     res.json(stats);
   } catch (err) {
     console.error('[teams/:number/stats]', err.message);
-    res.status(502).json({ error: 'Failed to fetch team stats.' });
+    res.json(null);
   }
 });
 
