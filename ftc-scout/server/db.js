@@ -16,6 +16,7 @@ export async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS teams_cache (
       number INTEGER PRIMARY KEY,
@@ -33,6 +34,7 @@ export async function initDB() {
       PRIMARY KEY (number, season)
     )
   `);
+
   console.log('[db] tables ready');
 }
 
@@ -82,7 +84,6 @@ export async function getSimulationCount() {
   return result.rows[0].total;
 }
 
-export default pool;
 export async function getTeamFromDB(number) {
   const result = await pool.query(
     'SELECT data FROM teams_cache WHERE number = $1',
@@ -116,3 +117,5 @@ export async function saveStatsToDB(number, season, data) {
     [number, season, JSON.stringify(data)]
   );
 }
+
+export default pool;
