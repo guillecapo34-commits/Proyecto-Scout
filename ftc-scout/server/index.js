@@ -4,6 +4,7 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import teamsRouter from './routes/teams.js';
+import { initDB } from './db.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -16,7 +17,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many requests, slow down.' },
 });
-
+await initDB();
 app.use('/api', limiter);
 app.use(express.json());
 
@@ -30,6 +31,7 @@ app.get('/simulator', (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, '../client/index.html'));
 });
+
 app.listen(PORT, () => {
   console.log(`FTC Scout running at http://localhost:${PORT}`);
 });
