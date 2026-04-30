@@ -110,7 +110,7 @@ router.get('/:number', validateTeamNumber, async (req, res) => {
     res.json(team);
   } catch (err) {
     console.error('[teams/:number]', err.message);
-    res.status(null);
+    res.status(504).json({ error: 'FTC Scout service unavailable.' });
   }
 });
 

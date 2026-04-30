@@ -40,7 +40,7 @@ export async function fetchTeamInfo(number) {
       rookieYear
       location { city state country }
     }
-  }`);
+  }`, 1);
 
   return data?.teamByNumber ?? null;
 }
@@ -130,7 +130,7 @@ export async function fetchFeaturedMatch() {
             }
           }
         }` }),
-        signal: AbortSignal.timeout(8000)
+        signal: AbortSignal.timeout(10000)
       });
 
       if (!res.ok) continue;
