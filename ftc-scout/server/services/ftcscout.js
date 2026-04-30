@@ -96,11 +96,20 @@ export async function searchTeams(searchText = '', limit = 50) {
   return data?.teamsSearch ?? [];
 }
 
+let featuredCache = null;
+let featuredCacheTime = 0;
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
+
 export async function fetchFeaturedMatch() {
-  const eventCodes = ['ARCMP', 'AUADQ', 'AUBRQ1', 'AUBRQ2', 'AUCMP', 'AUSYQ1', 'AUSYQ2', 'AUWOQ', 'BRCMP', 'BRBHQ', 'BRCAQ'];
+  // devolver cache si es reciente
+  if (featuredCache && Date.now() - featuredCacheTime < CACHE_TTL) {
+    return featuredCache;
+  }
+
+  const eventCodes = ['AUWOQ', 'BRBHQ', 'ARCMP'];
 
   for (let i = 0; i < eventCodes.length; i++) {
-    const code = eventCodes[Math.floor(Math.random() * eventCodes.length)];
+    const code = eventCodes[i];
     console.log('[featured-match] trying event:', code);
 
     try {
@@ -127,16 +136,15 @@ export async function fetchFeaturedMatch() {
       }`);
 
       const event = data?.eventByCode;
-      console.log('[featured-match] event:', event?.name, 'matches:', event?.matches?.length);
-
       if (!event) continue;
 
       const matches = event.matches.filter(m => m.scores?.red && m.scores?.blue);
-      console.log('[featured-match] valid matches:', matches.length);
       if (!matches.length) continue;
 
       const match = matches[Math.floor(Math.random() * matches.length)];
-      return { eventName: event.name, match };
+      featuredCache = { eventName: event.name, match };
+      featuredCacheTime = Date.now();
+      return featuredCache;
     } catch (e) {
       console.log('[featured-match]', e.message);
       continue;
