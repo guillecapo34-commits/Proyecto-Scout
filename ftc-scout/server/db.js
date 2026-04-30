@@ -16,6 +16,23 @@ export async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS teams_cache (
+      number INTEGER PRIMARY KEY,
+      data JSONB NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS stats_cache (
+      number INTEGER NOT NULL,
+      season INTEGER NOT NULL,
+      data JSONB,
+      updated_at TIMESTAMP DEFAULT NOW(),
+      PRIMARY KEY (number, season)
+    )
+  `);
   console.log('[db] tables ready');
 }
 
@@ -66,3 +83,36 @@ export async function getSimulationCount() {
 }
 
 export default pool;
+export async function getTeamFromDB(number) {
+  const result = await pool.query(
+    'SELECT data FROM teams_cache WHERE number = $1',
+    [number]
+  );
+  return result.rows[0]?.data ?? null;
+}
+
+export async function saveTeamToDB(number, data) {
+  await pool.query(
+    `INSERT INTO teams_cache (number, data, updated_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (number) DO UPDATE SET data = $2, updated_at = NOW()`,
+    [number, JSON.stringify(data)]
+  );
+}
+
+export async function getStatsFromDB(number, season) {
+  const result = await pool.query(
+    'SELECT data FROM stats_cache WHERE number = $1 AND season = $2',
+    [number, season]
+  );
+  return result.rows[0]?.data ?? null;
+}
+
+export async function saveStatsToDB(number, season, data) {
+  await pool.query(
+    `INSERT INTO stats_cache (number, season, data, updated_at)
+     VALUES ($1, $2, $3, NOW())
+     ON CONFLICT (number, season) DO UPDATE SET data = $3, updated_at = NOW()`,
+    [number, season, JSON.stringify(data)]
+  );
+}
