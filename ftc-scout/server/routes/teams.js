@@ -4,8 +4,29 @@ import { fetchTeamInfo, fetchTeamStats } from '../services/ftcscout.js';
 import fetch from 'node-fetch';
 
 const router = Router();
-const cache = new NodeCache({ stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 300 });
+const cache = new NodeCache({ stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 3600 });
 const ML_URL = process.env.ML_SERVICE_URL || 'http://localhost:5001';
+
+// ── Featured match cache ──
+let featuredMatchCache = null;
+let featuredMatchExpiry = 0;
+const FEATURED_TTL = 10 * 60 * 1000;
+
+async function warmFeaturedMatch() {
+  try {
+    const { fetchFeaturedMatch } = await import('../services/ftcscout.js');
+    const featured = await fetchFeaturedMatch();
+    if (featured) {
+      featuredMatchCache = featured;
+      featuredMatchExpiry = Date.now() + FEATURED_TTL;
+      console.log('[featured-match] cached:', featured.eventName);
+    }
+  } catch (e) {
+    console.error('[featured-match] warm error:', e.message);
+  }
+}
+
+warmFeaturedMatch();
 
 function validateTeamNumber(req, res, next) {
   const num = parseInt(req.params.number, 10);
@@ -34,17 +55,31 @@ router.get('/', async (req, res) => {
     res.status(502).json({ error: 'Failed to fetch teams.' });
   }
 });
+
 router.get('/featured-match', async (req, res) => {
+  if (featuredMatchCache && Date.now() < featuredMatchExpiry) {
+    return res.json(featuredMatchCache);
+  }
+
+  if (featuredMatchCache) {
+    res.json(featuredMatchCache);
+    warmFeaturedMatch();
+    return;
+  }
+
   try {
     const { fetchFeaturedMatch } = await import('../services/ftcscout.js');
     const featured = await fetchFeaturedMatch();
     if (!featured) return res.status(404).json({ error: 'No featured match found.' });
+    featuredMatchCache = featured;
+    featuredMatchExpiry = Date.now() + FEATURED_TTL;
     res.json(featured);
   } catch (err) {
     console.error('[featured-match]', err.message);
     res.status(502).json({ error: 'Failed to fetch featured match.' });
   }
 });
+
 router.get('/:number', validateTeamNumber, async (req, res) => {
   const { teamNumber } = req;
   const cacheKey = `team:${teamNumber}`;
@@ -81,6 +116,7 @@ router.get('/:number/stats', validateTeamNumber, async (req, res) => {
     res.status(502).json({ error: 'Failed to fetch team stats.' });
   }
 });
+
 router.get('/:number/matches', validateTeamNumber, async (req, res) => {
   const { teamNumber } = req;
   const season = parseInt(req.query.season, 10) || 2025;
@@ -99,6 +135,7 @@ router.get('/:number/matches', validateTeamNumber, async (req, res) => {
     res.status(502).json({ error: 'Failed to fetch matches.' });
   }
 });
+
 router.get('/:number/alliance-stats', validateTeamNumber, async (req, res) => {
   const { teamNumber } = req;
   const season = parseInt(req.query.season, 10) || 2025;
@@ -121,6 +158,7 @@ router.get('/:number/alliance-stats', validateTeamNumber, async (req, res) => {
     res.status(502).json({ error: 'Failed to fetch alliance team data.' });
   }
 });
+
 router.post('/predict', async (req, res) => {
   try {
     const response = await fetch(`${ML_URL}/predict`, {
@@ -141,4 +179,5 @@ router.post('/predict', async (req, res) => {
     res.status(502).json({ error: 'ML service unavailable' });
   }
 });
+
 export default router;
