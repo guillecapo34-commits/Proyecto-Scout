@@ -110,7 +110,7 @@ router.get('/:number', validateTeamNumber, async (req, res) => {
     res.json(team);
   } catch (err) {
     console.error('[teams/:number]', err.message);
-    res.status(502).json({ error: 'Failed to fetch team data.' });
+    res.status(null);
   }
 });
 
