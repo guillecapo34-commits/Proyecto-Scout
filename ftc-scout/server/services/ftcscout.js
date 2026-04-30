@@ -101,52 +101,50 @@ let featuredCacheTime = 0;
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
 
 export async function fetchFeaturedMatch() {
-  // devolver cache si es reciente
-  if (featuredCache && Date.now() - featuredCacheTime < CACHE_TTL) {
-    return featuredCache;
-  }
+  const eventCodes = [
+    'ARCMP', 'AUWOQ', 'BRBHQ', 'AUSYQ1', 'AUSYQ2',
+    'AUBRQ1', 'AUBRQ2', 'AUCMP', 'BRCMP', 'BRCAQ', 'AUADQ'
+  ];
 
-  const eventCodes = ['AUWOQ', 'BRBHQ', 'ARCMP'];
+  // mezclar aleatoriamente
+  const shuffled = eventCodes.sort(() => Math.random() - 0.5);
 
-  for (let i = 0; i < eventCodes.length; i++) {
-    const code = eventCodes[i];
+  for (const code of shuffled) {
     console.log('[featured-match] trying event:', code);
-
     try {
-      const data = await gql(`{
-        eventByCode(season: 2025, code: "${code}") {
-          name
-          matches {
-            id
-            matchNum
-            tournamentLevel
-            scores {
-              ... on MatchScores2025 {
-                red { totalPoints autoPoints dcPoints }
-                blue { totalPoints autoPoints dcPoints }
+      const res = await fetch(BASE_GQL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: `{
+          eventByCode(season: 2025, code: "${code}") {
+            name
+            matches {
+              id matchNum tournamentLevel
+              scores {
+                ... on MatchScores2025 {
+                  red { totalPoints autoPoints dcPoints }
+                  blue { totalPoints autoPoints dcPoints }
+                }
               }
-            }
-            teams {
-              teamNumber
-              alliance
-              station
+              teams { teamNumber alliance station }
             }
           }
-        }
-      }`);
+        }` }),
+        signal: AbortSignal.timeout(8000)
+      });
 
-      const event = data?.eventByCode;
+      if (!res.ok) continue;
+      const json = await res.json();
+      const event = json.data?.eventByCode;
       if (!event) continue;
 
       const matches = event.matches.filter(m => m.scores?.red && m.scores?.blue);
       if (!matches.length) continue;
 
       const match = matches[Math.floor(Math.random() * matches.length)];
-      featuredCache = { eventName: event.name, match };
-      featuredCacheTime = Date.now();
-      return featuredCache;
+      console.log('[featured-match] cached:', event.name);
+      return { eventName: event.name, match };
     } catch (e) {
-      console.log('[featured-match]', e.message);
       continue;
     }
   }
