@@ -5,7 +5,7 @@ import os
 import random
 
 GQL = 'https://api.ftcscout.org/graphql'
-DATABASE_URL = 'postgresql://postgres:rLGFTpvYzLyZGOcHarOdRgWMezAwarvb@postgres.railway.internal:5432/railway'  # copiala de Railway Variables
+DATABASE_URL = 'postgresql://postgres:rLGFTpvYzLyZGOcHarOdRgWMezAwarvb@postgres.railway.internal:5432/railway   '  # copiala de Railway Variables
 
 EVENT_CODES = ['ARCMP', 'AUWOQ', 'BRBHQ', 'AUSYQ1', 'AUSYQ2', 'AUBRQ1', 'AUBRQ2', 'AUCMP', 'BRCMP']
 
