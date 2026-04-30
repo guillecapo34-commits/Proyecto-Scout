@@ -9,7 +9,7 @@ async function gql(query, retries = 2) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
-      signal: AbortSignal.timeout(30000)
+      signal: AbortSignal.timeout(15000)
     });
 
     if (!res.ok) throw new Error(`FTCScout GQL HTTP error: ${res.status}`);

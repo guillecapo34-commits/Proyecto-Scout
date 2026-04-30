@@ -18,6 +18,7 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, slow down.' },
 });
 await initDB();
+app.set('trust proxy', 1); 
 app.use('/api', limiter);
 app.use(express.json());
 
