@@ -5,7 +5,7 @@ import os
 import random
 
 GQL = 'https://api.ftcscout.org/graphql'
-DATABASE_URL = 'postgresql://postgres:rLGFTpvYzLyZGOcHarOdRgWMezAwarvb@postgres.railway.internal:5432/railway   '  # copiala de Railway Variables
+DATABASE_URL = 'postgresql://postgres:rLGFTpvYzLyZGOcHarOdRgWMezAwarvb@switchyard.proxy.rlwy.net:16687/railway'  # copiala de Railway Variables
 
 EVENT_CODES = ['ARCMP', 'AUWOQ', 'BRBHQ', 'AUSYQ1', 'AUSYQ2', 'AUBRQ1', 'AUBRQ2', 'AUCMP', 'BRCMP']
 
@@ -27,7 +27,7 @@ def fetch_featured():
                         teams {{ teamNumber alliance station }}
                     }}
                 }}
-            }}'''}, timeout=15)
+            }}'''}, timeout=30)
             data = res.json()
             event = data['data']['eventByCode']
             if not event: continue

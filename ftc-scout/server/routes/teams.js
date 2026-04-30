@@ -7,7 +7,25 @@ const router = Router();
 const cache = new NodeCache({ stdTTL: parseInt(process.env.CACHE_TTL_SECONDS) || 3600 });
 const ML_URL = process.env.ML_SERVICE_URL || 'http://localhost:5001';
 
-// ── Featured match cache ──
+const FALLBACK_FEATURED = {
+  eventName: 'Argentina Championship',
+  match: {
+    id: 'fallback',
+    matchNum: 1,
+    tournamentLevel: 'QUALS',
+    scores: {
+      red: { totalPoints: 175, autoPoints: 27, dcPoints: 73 },
+      blue: { totalPoints: 76,  autoPoints: 3,  dcPoints: 28 }
+    },
+    teams: [
+      { teamNumber: 32753, alliance: 'Red', station: 'One' },
+      { teamNumber: 32736, alliance: 'Red', station: 'Two' },
+      { teamNumber: 34141, alliance: 'Blue', station: 'One' },
+      { teamNumber: 34144, alliance: 'Blue', station: 'Two' }
+    ]
+  }
+};
+
 let featuredMatchCache = null;
 let featuredMatchExpiry = 0;
 const FEATURED_TTL = 10 * 60 * 1000;
@@ -20,9 +38,15 @@ async function warmFeaturedMatch() {
       featuredMatchCache = featured;
       featuredMatchExpiry = Date.now() + FEATURED_TTL;
       console.log('[featured-match] cached:', featured.eventName);
+    } else {
+      featuredMatchCache = FALLBACK_FEATURED;
+      featuredMatchExpiry = Date.now() + FEATURED_TTL;
+      console.log('[featured-match] using fallback');
     }
   } catch (e) {
-    console.error('[featured-match] warm error:', e.message);
+    featuredMatchCache = FALLBACK_FEATURED;
+    featuredMatchExpiry = Date.now() + FEATURED_TTL;
+    console.log('[featured-match] using fallback after error');
   }
 }
 
@@ -67,17 +91,8 @@ router.get('/featured-match', async (req, res) => {
     return;
   }
 
-  try {
-    const { fetchFeaturedMatch } = await import('../services/ftcscout.js');
-    const featured = await fetchFeaturedMatch();
-    if (!featured) return res.status(404).json({ error: 'No featured match found.' });
-    featuredMatchCache = featured;
-    featuredMatchExpiry = Date.now() + FEATURED_TTL;
-    res.json(featured);
-  } catch (err) {
-    console.error('[featured-match]', err.message);
-    res.status(502).json({ error: 'Failed to fetch featured match.' });
-  }
+  res.json(FALLBACK_FEATURED);
+  warmFeaturedMatch();
 });
 
 router.get('/:number', validateTeamNumber, async (req, res) => {
